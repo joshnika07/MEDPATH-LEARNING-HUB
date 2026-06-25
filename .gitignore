@@ -1,0 +1,15 @@
+# Dependency directories
+node_modules/
+backend/node_modules/
+
+# Environment variables
+.env
+backend/.env
+
+# OS files
+Thumbs.db
+EHthumbs.db
+Desktop.ini
+
+# Logs
+*.log
