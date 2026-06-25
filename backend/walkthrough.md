@@ -10,10 +10,11 @@ The backend directory has been scaffolded as follows:
 
 ```text
 backend/
-├── database/         # Database connection and configuration files
+├── config/           # Configuration files (e.g. database connection db.js)
 ├── models/           # Data models (e.g., Mongoose schemas, Sequelize models)
 ├── routes/           # Express routes mapping HTTP endpoints to controllers
 ├── controllers/      # Route handlers/business logic for each endpoint
+├── data/             # Seed data or data files
 ├── uploads/          # Directory to store uploaded media files
 ├── docs/             # Documentation files (e.g., API specifications, Swagger files)
 ├── server.js         # Core entry point of the backend application
@@ -74,7 +75,7 @@ JWT_SECRET=your_jwt_secret_key_here
 
 ## 3. Best Practices & Architecture Patterns
 
-* **Database Connection:** Place database connection logic inside `backend/database/db.js` (or similar) and import it in `server.js`.
+* **Database Connection:** Place database connection logic inside `backend/config/db.js` (or similar) and import it in `server.js`.
 * **Routing:** Keep routes clean by delegating the actual request processing logic to the controllers. 
   * *Example Route (`routes/auth.js`):* `router.post('/login', authController.login);`
 * **Controllers:** Handle user input, call services/database queries, and return the HTTP response with appropriate status codes (e.g. `200 OK`, `201 Created`, `400 Bad Request`, `500 Server Error`).

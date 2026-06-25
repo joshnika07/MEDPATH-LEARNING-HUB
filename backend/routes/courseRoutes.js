@@ -1,8 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const courseController = require('../controllers/courseController');
 
-router.get('/', courseController.getCourses);
-router.get('/:id', courseController.getCourseById);
+router.get("/courses", (req, res) => {
+    res.json([
+        "B.Pharm",
+        "B.Sc Nursing",
+        "GNM Nursing"
+    ]);
+});
 
 module.exports = router;

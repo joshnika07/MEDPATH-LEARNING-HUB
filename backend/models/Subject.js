@@ -1,20 +1,16 @@
 const mongoose = require('mongoose');
 
 const SubjectSchema = new mongoose.Schema({
-  subject_id: {
-    type: Number,
-    required: true,
-    unique: true
-  },
-  course_id: {
-    type: Number,
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
     required: true
   },
   semester: {
     type: String,
     required: true
   },
-  subject_name: {
+  subjectName: {
     type: String,
     required: true
   }
