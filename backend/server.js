@@ -3,10 +3,6 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 
-// Import route modules
-const courseRoutes = require("./routes/courseRoutes");
-const subjectRoutes = require("./routes/subjectRoutes");
-
 // Load environment variables
 dotenv.config();
 
@@ -18,7 +14,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Basic API route
+// Import route modules
+const courseRoutes = require("./routes/courseRoutes");
+const subjectRoutes = require("./routes/subjectRoutes");
+const materialRoutes = require("./routes/materialRoutes");
+
+// Mount routes under /api
+app.use("/api", courseRoutes);
+app.use("/api", subjectRoutes);
+app.use("/api", materialRoutes);
+
+// Basic static route
 app.get("/api/courses-static", (req, res) => {
   res.json([
     { id: 1, name: "B.Pharm" },
@@ -27,10 +33,6 @@ app.get("/api/courses-static", (req, res) => {
   ]);
 });
 
-// Mount routes
-app.use("/api/course", courseRoutes);
-app.use("/api/subjects", subjectRoutes);
-
 app.get("/", (req, res) => {
     res.send("MedPath Learning Hub Backend Running");
 });
@@ -38,5 +40,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server Running on Port ${PORT}`);
 });

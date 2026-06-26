@@ -1,21 +1,15 @@
-const mongoose = require('mongoose');
+const connectDB = require('../config/db');
+const pool = connectDB.pool;
 
-const CourseSchema = new mongoose.Schema({
-  courseName: {
-    type: String,
-    required: true,
-    unique: true
+const Course = {
+  find: async () => {
+    const [rows] = await pool.query('SELECT * FROM courses');
+    return rows;
   },
-  duration: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    required: true
+  findById: async (id) => {
+    const [rows] = await pool.query('SELECT * FROM courses WHERE course_id = ?', [id]);
+    return rows[0];
   }
-}, {
-  timestamps: true
-});
+};
 
-module.exports = mongoose.model('Course', CourseSchema);
+module.exports = Course;
