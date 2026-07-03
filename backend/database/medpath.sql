@@ -1,5 +1,5 @@
--- CREATE DATABASE IF NOT EXISTS medpath_db;
--- USE medpath_db;
+CREATE DATABASE IF NOT EXISTS medpath_learning_hub;
+USE medpath_learning_hub;
 
 -- 1. Courses Table
 CREATE TABLE IF NOT EXISTS courses (
