@@ -1,110 +1,195 @@
 # MedPath Learning Hub Backend
 
-This repository contains the Node.js / Express backend service for the MedPath Learning Hub. The backend manages courses, subjects, syllabi, PDF study materials, learning videos, important exam topics, and practical guidelines, utilizing a MySQL relational database.
+This is the backend service for the MedPath Learning Hub, an online education portal for pharmacy and nursing students.
+
+## Backend Description
+The backend manages administrative logging, student curriculum retrieval, courses, semesters, subjects, syllabus information, PDF study materials, learning video lists, exam topics, and practical laboratory guidelines. It uses a MySQL relational database for persistent storage and includes an automatic memory-cached static JSON fallback if MySQL is not available.
+
+## Technologies Used
+* **Runtime Environment**: Node.js (v18+)
+* **Web Framework**: Express.js
+* **Database Management**: MySQL with the `mysql2` client library (connection pool supported)
+* **Authentication**: JWT (JSON Web Tokens) and header-based Direct API Key validation
+* **Logging Engine**: Custom file and console logging middleware
+* **Process Watcher**: `nodemon` (for development auto-reload)
 
 ---
 
 ## Folder Structure
-
 ```text
 backend/
-├── config/           # Database configuration and connection setup
-│   └── db.js         # MySQL connection pool configuration
-├── controllers/      # Route request/response handlers
-│   ├── courseController.js
-│   ├── subjectController.js
-│   ├── materialController.js
-│   ├── syllabusController.js
-│   ├── videoController.js
-│   ├── topicController.js
-│   └── practicalController.js
-├── data/             # Seeding scripts and mock/sample data
-│   └── sample_data.sql # Relational database seed data statements
-├── database/         # Database schema files
-│   ├── medpath.sql   # Combined schema and seed backup
-│   └── schema.sql    # Relational database schema table definitions
-├── models/           # Database queries and mappings
-│   ├── Course.js
-│   ├── Subject.js
-│   ├── Material.js
-│   ├── Syllabus.js
-│   ├── Video.js
-│   ├── Topic.js
-│   └── Practical.js
-├── routes/           # Router middleware mapping routes to controllers
-│   ├── courseRoutes.js
-│   ├── subjectRoutes.js
-│   ├── materialRoutes.js
-│   ├── syllabusRoutes.js
-│   ├── videoRoutes.js
-│   ├── topicRoutes.js
-│   └── practicalRoutes.js
-├── uploads/          # Local media directory for PDF/video uploads
-├── .env              # Environment configuration variables
-├── server.js         # Express app startup and configuration entry point
-└── package.json      # Node dependency registry and build commands
+├── docs/                 # Day-to-day progress documents and reports
+├── logs/                 # Persistent request and admin activity logs
+├── src/                  # Source root directory
+│   ├── config/           # Database configurations
+│   │   └── db.js         # MySQL connection pool initializers
+│   ├── controllers/      # Handlers resolving routing operations
+│   │   ├── adminResourceController.js
+│   │   ├── apiDocsController.js
+│   │   ├── authController.js
+│   │   ├── courseController.js
+│   │   ├── logController.js
+│   │   └── resourceController.js
+│   ├── data/             # Sample database mapping configuration
+│   │   └── courseData.js # Static catalog data definitions & slug templates
+│   ├── middleware/       # Express middlewares
+│   │   ├── adminActivityLogger.js
+│   │   ├── errorHandler.js
+│   │   ├── jwtAuth.js
+│   │   ├── notFound.js
+│   │   └── requestLogger.js
+│   ├── models/           # Persistent schema queries
+│   │   └── courseModel.js # MySQL database queries for courses and subjects
+│   ├── routes/           # Routing engines mapping URLs to handlers
+│   │   ├── adminResourceRoutes.js
+│   │   ├── apiDocsRoutes.js
+│   │   ├── authRoutes.js
+│   │   ├── courseRoutes.js
+│   │   ├── logRoutes.js
+│   │   ├── resourceRoutes.js
+│   │   └── subjectRoutes.js
+│   ├── utils/            # Shared helper functions
+│   │   └── resourceTemplate.js
+│   └── app.js            # Express app middleware definitions
+├── database/             # Relational schema backups
+│   └── medpath.sql       # Backup schema & initial seed data dump
+├── server.js             # Entry point file with graceful shutdowns
+├── package.json          # Node dependency registry and script aliases
+├── .env                  # Confidential local environment secrets
+└── .env.example          # Template configuration instructions
 ```
 
 ---
 
-## Technical Stack
-
-* **Runtime:** Node.js
-* **Framework:** Express.js
-* **Database Driver:** `mysql2` (supports both promise-based pools and direct connections)
-* **Development Server:** `nodemon`
+## Environment Setup
+1. Create a [.env](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/.env) file in the root `backend/` directory by copying the template file [.env.example](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/.env.example):
+   ```bash
+   cp .env.example .env
+   ```
+2. Modify the values inside `.env` to match your local MySQL configuration, JWT secret key, and API direct access key.
 
 ---
 
-## Getting Started
-
-### 1. Installation
-Clone the repository and install the dependencies from the `backend/` directory:
+## How to Install Packages
+In the `backend/` directory, execute:
 ```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the `backend/` directory and configure the database connection details:
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=medpath_db
-```
+---
 
-### 3. Initialize the Database
-Import the schema and initial seed data into your local MySQL database:
-```bash
-mysql -u root -p medpath_db < database/schema.sql
-mysql -u root -p medpath_db < data/sample_data.sql
-```
+## How to Run Backend
+* To run in **Development Mode** (with automatic watch/restart):
+  ```bash
+  npm run dev
+  ```
+* To run in **Production Mode**:
+  ```bash
+  npm start
+  ```
 
-### 4. Running the Server
-To start the application in development mode with auto-reload:
-```bash
-npm run dev
-```
+---
 
-To run in production mode:
+## How to Seed Database
+You can seed the database schema and sample records by executing the seed SQL dump directly into your local database:
 ```bash
-npm start
+mysql -u root -p medpath_learning_hub < database/medpath.sql
+```
+Alternatively, you can trigger the database seed script:
+```bash
+npm run seed
 ```
 
 ---
 
-## API Endpoints Reference
+## How to Test APIs
+### A. Pre-Deployment Validation (Production Check)
+Runs [test-production-check.js](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/test-production-check.js) which ensures variables in `.env` are configured correctly, verifies database connectivity, audits system privileges, checks writable log directories, and flags any default passwords:
+```bash
+node test-production-check.js
+```
 
-All endpoints return data in JSON format and are prefixed with `/api`.
+### B. End-to-End API Integration Suite
+Runs [test-all-apis.js](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/test-all-apis.js) which executes a complete suite of mock request actions against the live application server (covers public lookup paths, admin resource uploads, log fetching, and self-documenting routing tables):
+```bash
+node test-all-apis.js
+```
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| **GET** | `/api/courses` | Retrieve list of all courses |
-| **GET** | `/api/course/:id` | Retrieve detailed information for a specific course |
-| **GET** | `/api/subjects/:courseId` | Retrieve all subjects for a specific course ID |
-| **GET** | `/api/syllabus/:subjectId` | Retrieve syllabus units for a specific subject ID |
-| **GET** | `/api/materials/:subjectId` | Retrieve learning materials (PDFs) for a subject ID |
-| **GET** | `/api/videos/:subjectId` | Retrieve learning videos for a subject ID |
-| **GET** | `/api/topics/:subjectId` | Retrieve list of important exam topics for a subject ID |
-| **GET** | `/api/practicals/:subjectId` | Retrieve practical lesson details for a subject ID |
+### C. Final Submission Verification Suite
+Runs [test-final-submission.js](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/test-final-submission.js) which programmatically spawns the server if it is offline, verifies Git ignore exclusion rules (e.g., node_modules/ and .env tracking), package dependency scripts config, logs directory writability, and API responsiveness:
+```bash
+npm run final-check
+```
+
+---
+
+## Important API List
+All endpoint responses return JSON payloads.
+
+### General Endpoints
+* `GET /` - Welcome message.
+* `GET /api/health` - Check backend system health status.
+* `GET /api/docs` - Retrieve self-documenting routing table specs.
+
+### Authentication Endpoints
+* `POST /api/auth/admin/login` - Authenticate admin credentials and retrieve JWT.
+
+### Course & Subject Lookup
+* `GET /api/courses` - Retrieve all available academic courses.
+* `GET /api/courses/:courseId` - Retrieve detailed course information including semesters.
+* `GET /api/courses/:courseId/semesters` - Retrieve semesters under a course.
+* `GET /api/courses/:courseId/subjects` - Retrieve all subjects under a course.
+* `GET /api/courses/:courseId/semesters/:semesterId/subjects` - Retrieve subjects under a specific semester.
+* `GET /api/subjects` - Retrieve flat index list of all subjects.
+* `GET /api/subjects/:subjectId` - Retrieve subject metadata.
+* `GET /api/search?query=...` - Keyword search across course, semester, or subject name.
+
+### Study Resources
+* `GET /api/subjects/:subjectId/resources` - Flat list of all resources.
+* `GET /api/subjects/:subjectId/syllabus` - Get subject units structure.
+* `GET /api/subjects/:subjectId/materials` - Get study materials (PDFs).
+* `GET /api/subjects/:subjectId/important-topics` - Get crucial exam topics.
+* `GET /api/subjects/:subjectId/videos` - Get video lectures.
+* `GET /api/subjects/:subjectId/practicals` - Get lab guidelines.
+* `GET /api/subjects/:subjectId/learning-process` - Get study directions.
+
+### Administrative Management (Protected)
+* `POST /api/admin/subjects/:subjectId/resources` - Create/replace learning resources.
+* `PUT /api/admin/subjects/:subjectId/resources` - Edit/patch study details.
+* `DELETE /api/admin/subjects/:subjectId/resources` - Reset resources for a subject.
+
+### Activity Logs (Protected)
+* `GET /api/admin/logs/requests` - Retrieve client HTTP activity metrics.
+* `GET /api/admin/logs/activities` - Retrieve administrative action audits.
+
+---
+
+## Admin Authentication Note
+All administrative endpoints starting with `/api/admin` require authentication. The server checks:
+1. `Authorization: Bearer <token>` header containing a valid signed JWT.
+2. `x-admin-key: <key>` header matching the system key (e.g. `medpath-admin-123` or custom production keys) as a bypass fallback.
+
+---
+
+## Logging Note
+The system employs custom loggers to trace and audit activity:
+* **Request Logger**: Logs all public access requests (such as `/api/health`, `/api/courses`) in the console and writes them to [request_activity.log](file:///c:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/logs/request_activity.log).
+* **Admin Activity Logger**: Audits all login events and data-altering requests made to protected resources, logging actions to the console and to [admin_activity.log](file:///c:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/logs/admin_activity.log).
+
+---
+
+## Deployment Readiness
+Before deploying the service to staging or production, execute the automated readiness validation suite to confirm configuration safety and structural integrity:
+```bash
+npm run deploy-check
+```
+For more details, see the [Deployment Guide](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/deployment-guide.md).
+
+---
+
+## Final Backend Summary
+To retrieve a comprehensive overview of the MedPath Learning Hub project details, completed backend modules, and grouped API paths, execute a GET request to:
+```http
+GET /api/project/summary
+```
+For more information, see the [Backend Internship Summary](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/backend-internship-summary.md).
