@@ -317,6 +317,45 @@ async function deleteSubjectResources(subjectId) {
   return result.affectedRows > 0;
 }
 
+/**
+ * Fetch all courses, semesters, and subjects in a tree structure
+ */
+async function getCourseTree() {
+  const pool = await connectDB.getPool();
+  if (!pool) return null;
+
+  const [courses] = await pool.query("SELECT course_id AS id, course_name AS name, full_name AS fullName, duration, total_courses AS totalCourses, description FROM courses");
+  const [semesters] = await pool.query("SELECT semester_id AS id, semester_name AS name, course_id FROM semesters");
+  const [subjects] = await pool.query("SELECT subject_id AS id, subject_name AS name, semester_id FROM subjects");
+
+  return courses.map(course => {
+    const courseSemesters = semesters
+      .filter(sem => sem.course_id === course.id)
+      .map(sem => {
+        const semSubjects = subjects
+          .filter(sub => sub.semester_id === sem.id)
+          .map(sub => ({
+            id: sub.id,
+            name: sub.name
+          }));
+        return {
+          id: sem.id,
+          name: sem.name,
+          subjects: semSubjects
+        };
+      });
+    return {
+      id: course.id,
+      name: course.name,
+      fullName: course.fullName,
+      duration: course.duration,
+      totalCourses: course.totalCourses,
+      description: course.description,
+      semesters: courseSemesters
+    };
+  });
+}
+
 module.exports = {
   getAllCourses,
   getCourseById,
@@ -330,5 +369,6 @@ module.exports = {
   checkSubjectResourcesExist,
   addSubjectResources,
   updateSubjectResources,
-  deleteSubjectResources
+  deleteSubjectResources,
+  getCourseTree
 };

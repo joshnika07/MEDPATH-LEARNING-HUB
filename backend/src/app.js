@@ -12,6 +12,7 @@ const adminActivityLogger = require("./middleware/adminActivityLogger");
 const logRoutes = require("./routes/logRoutes");
 const apiDocsRoutes = require("./routes/apiDocsRoutes");
 const projectSummaryRoutes = require("./routes/projectSummaryRoutes");
+const frontendRoutes = require("./routes/frontendRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -43,6 +44,7 @@ app.use("/api", resourceRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", apiDocsRoutes);
 app.use("/api", projectSummaryRoutes);
+app.use("/api/frontend", frontendRoutes);
 app.use("/api/admin", jwtAuth, adminResourceRoutes);
 app.use("/api/admin", jwtAuth, logRoutes);
 

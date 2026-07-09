@@ -193,3 +193,12 @@ To retrieve a comprehensive overview of the MedPath Learning Hub project details
 GET /api/project/summary
 ```
 For more information, see the [Backend Internship Summary](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/backend-internship-summary.md).
+
+---
+
+## Final Demo Commands
+To run the automated endpoint validation demo flow to verify the entire system is responsive, execute:
+```bash
+npm run demo-check
+```
+For more details, see the [Backend Presentation Demo Script](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/backend-demo-script.md).
