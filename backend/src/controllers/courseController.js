@@ -1,12 +1,11 @@
+const courseModel = require("../models/courseModel");
 const {
   getAllCourses,
   getCourseById,
   getAllSubjects,
   getSubjectById
 } = require("../data/courseData");
-
 const buildSubjectResources = require("../utils/resourceTemplate");
-const connectDB = require("../config/db");
 
 function parseJsonField(field, fallback) {
   if (!field) return fallback;
@@ -22,31 +21,13 @@ function parseJsonField(field, fallback) {
 
 async function getCourses(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [rows] = await pool.query(`
-        SELECT 
-          c.course_id AS id, 
-          c.course_name AS name, 
-          c.full_name AS fullName, 
-          c.duration, 
-          c.total_courses AS totalCourses, 
-          c.description, 
-          COALESCE(s.sem_count, 0) AS semesterCount
-        FROM courses c
-        LEFT JOIN (
-          SELECT course_id, COUNT(*) AS sem_count 
-          FROM semesters 
-          GROUP BY course_id
-        ) s ON c.course_id = s.course_id
-      `);
-      if (rows && rows.length > 0) {
-        return res.json({
-          success: true,
-          count: rows.length,
-          data: rows
-        });
-      }
+    const courses = await courseModel.getAllCourses();
+    if (courses && courses.length > 0) {
+      return res.json({
+        success: true,
+        count: courses.length,
+        data: courses
+      });
     }
   } catch (error) {
     console.error("Database query failed for getCourses, using mock data:", error.message);
@@ -78,45 +59,12 @@ async function getCourses(req, res) {
 
 async function getCourse(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [courses] = await pool.query("SELECT * FROM courses WHERE course_id = ?", [req.params.courseId]);
-      if (courses.length > 0) {
-        const course = courses[0];
-        const [semesters] = await pool.query("SELECT * FROM semesters WHERE course_id = ?", [course.course_id]);
-        const [subjects] = await pool.query(`
-          SELECT s.* FROM subjects s 
-          JOIN semesters sem ON s.semester_id = sem.semester_id 
-          WHERE sem.course_id = ?
-        `, [course.course_id]);
-
-        const formattedSemesters = semesters.map(sem => {
-          const semSubjects = subjects
-            .filter(sub => sub.semester_id === sem.semester_id)
-            .map(sub => ({
-              id: sub.subject_id,
-              name: sub.subject_name
-            }));
-          return {
-            id: sem.semester_id,
-            name: sem.semester_name,
-            subjects: semSubjects
-          };
-        });
-
-        return res.json({
-          success: true,
-          data: {
-            id: course.course_id,
-            name: course.course_name,
-            fullName: course.full_name,
-            duration: course.duration,
-            totalCourses: course.total_courses,
-            description: course.description,
-            semesters: formattedSemesters
-          }
-        });
-      }
+    const course = await courseModel.getCourseById(req.params.courseId);
+    if (course) {
+      return res.json({
+        success: true,
+        data: course
+      });
     }
   } catch (error) {
     console.error("Database query failed for getCourse, using mock data:", error.message);
@@ -146,27 +94,13 @@ async function getCourse(req, res) {
 
 async function getSemesters(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [courses] = await pool.query("SELECT course_name FROM courses WHERE course_id = ?", [req.params.courseId]);
-      if (courses.length > 0) {
-        const [semesters] = await pool.query(`
-          SELECT 
-            s.semester_id AS id, 
-            s.semester_name AS name, 
-            COUNT(sub.subject_id) AS subjectCount
-          FROM semesters s 
-          LEFT JOIN subjects sub ON s.semester_id = sub.semester_id 
-          WHERE s.course_id = ? 
-          GROUP BY s.semester_id
-        `, [req.params.courseId]);
-        
-        return res.json({
-          success: true,
-          courseName: courses[0].course_name,
-          data: semesters
-        });
-      }
+    const result = await courseModel.getSemestersByCourseId(req.params.courseId);
+    if (result) {
+      return res.json({
+        success: true,
+        courseName: result.courseName,
+        data: result.semesters
+      });
     }
   } catch (error) {
     console.error("Database query failed for getSemesters, using mock data:", error.message);
@@ -201,30 +135,15 @@ async function getSemesters(req, res) {
 
 async function getSubjectsBySemester(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [semesterInfo] = await pool.query(`
-        SELECT c.course_name, sem.semester_name 
-        FROM semesters sem
-        JOIN courses c ON sem.course_id = c.course_id
-        WHERE sem.semester_id = ? AND sem.course_id = ?
-      `, [req.params.semesterId, req.params.courseId]);
-
-      if (semesterInfo.length > 0) {
-        const [subjects] = await pool.query(`
-          SELECT subject_id AS id, subject_name AS name 
-          FROM subjects 
-          WHERE semester_id = ?
-        `, [req.params.semesterId]);
-
-        return res.json({
-          success: true,
-          courseName: semesterInfo[0].course_name,
-          semesterName: semesterInfo[0].semester_name,
-          count: subjects.length,
-          data: subjects
-        });
-      }
+    const result = await courseModel.getSubjectsBySemester(req.params.courseId, req.params.semesterId);
+    if (result) {
+      return res.json({
+        success: true,
+        courseName: result.courseName,
+        semesterName: result.semesterName,
+        count: result.subjects.length,
+        data: result.subjects
+      });
     }
   } catch (error) {
     console.error("Database query failed for getSubjectsBySemester, using mock data:", error.message);
@@ -268,49 +187,30 @@ async function getSubjectsBySemester(req, res) {
 
 async function getSubjectDetails(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [subjects] = await pool.query(`
-        SELECT 
-          sub.subject_id AS id, 
-          sub.subject_name AS name, 
-          c.course_id AS courseId, 
-          c.course_name AS courseName, 
-          sem.semester_id AS semesterId, 
-          sem.semester_name AS semesterName 
-        FROM subjects sub 
-        JOIN semesters sem ON sub.semester_id = sem.semester_id 
-        JOIN courses c ON sem.course_id = c.course_id
-        WHERE sub.subject_id = ?
-      `, [req.params.subjectId]);
-
-      if (subjects.length > 0) {
-        const subject = subjects[0];
-        const [resourcesRows] = await pool.query("SELECT * FROM subject_resources WHERE subject_id = ?", [subject.id]);
-        
-        let resources;
-        if (resourcesRows.length > 0) {
-          const row = resourcesRows[0];
-          resources = {
-            syllabusUnits: parseJsonField(row.syllabus_units, []),
-            studyMaterials: parseJsonField(row.study_materials, []),
-            importantTopics: parseJsonField(row.important_topics, []),
-            videos: parseJsonField(row.video_links, []),
-            practicals: parseJsonField(row.practicals, []),
-            learningProcess: parseJsonField(row.learning_process, [])
-          };
-        } else {
-          resources = buildSubjectResources(subject);
-        }
-
-        return res.json({
-          success: true,
-          data: {
-            subject,
-            resources
-          }
-        });
+    const result = await courseModel.getSubjectDetails(req.params.subjectId);
+    if (result) {
+      const { subject, resourcesRow } = result;
+      let resources;
+      if (resourcesRow) {
+        resources = {
+          syllabusUnits: parseJsonField(resourcesRow.syllabus_units, []),
+          studyMaterials: parseJsonField(resourcesRow.study_materials, []),
+          importantTopics: parseJsonField(resourcesRow.important_topics, []),
+          videos: parseJsonField(resourcesRow.video_links, []),
+          practicals: parseJsonField(resourcesRow.practicals, []),
+          learningProcess: parseJsonField(resourcesRow.learning_process, [])
+        };
+      } else {
+        resources = buildSubjectResources(subject);
       }
+
+      return res.json({
+        success: true,
+        data: {
+          subject,
+          resources
+        }
+      });
     }
   } catch (error) {
     console.error("Database query failed for getSubjectDetails, using mock data:", error.message);
@@ -342,33 +242,18 @@ async function getSubjectDetails(req, res) {
 }
 
 async function searchSubjects(req, res) {
-  const query = (req.query.query || "").toLowerCase();
+  const query = (req.query.query || "").trim().toLowerCase();
 
   if (!query) {
     return res.status(400).json({
       success: false,
-      message: "Please provide query. Example: /api/search?query=anatomy"
+      message: "Search query is required. Example: /api/search?query=anatomy"
     });
   }
 
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const dbQuery = `%${query}%`;
-      const [subjects] = await pool.query(`
-        SELECT 
-          sub.subject_id AS id, 
-          sub.subject_name AS name, 
-          c.course_id AS courseId, 
-          c.course_name AS courseName, 
-          sem.semester_id AS semesterId, 
-          sem.semester_name AS semesterName 
-        FROM subjects sub 
-        JOIN semesters sem ON sub.semester_id = sem.semester_id 
-        JOIN courses c ON sem.course_id = c.course_id
-        WHERE sub.subject_name LIKE ? OR c.course_name LIKE ? OR sem.semester_name LIKE ?
-      `, [dbQuery, dbQuery, dbQuery]);
-
+    const subjects = await courseModel.searchSubjects(query);
+    if (subjects) {
       return res.json({
         success: true,
         query,
@@ -403,21 +288,8 @@ async function searchSubjects(req, res) {
 
 async function getAllSubjectsList(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [subjects] = await pool.query(`
-        SELECT 
-          sub.subject_id AS id, 
-          sub.subject_name AS name, 
-          c.course_id AS courseId, 
-          c.course_name AS courseName, 
-          sem.semester_id AS semesterId, 
-          sem.semester_name AS semesterName 
-        FROM subjects sub 
-        JOIN semesters sem ON sub.semester_id = sem.semester_id 
-        JOIN courses c ON sem.course_id = c.course_id
-      `);
-
+    const subjects = await courseModel.getAllSubjectsList();
+    if (subjects) {
       return res.json({
         success: true,
         count: subjects.length,
@@ -446,31 +318,14 @@ async function getAllSubjectsList(req, res) {
 
 async function getSubjectsByCourse(req, res) {
   try {
-    const pool = await connectDB.getPool();
-    if (pool) {
-      const [courses] = await pool.query("SELECT course_name FROM courses WHERE course_id = ?", [req.params.courseId]);
-      if (courses.length > 0) {
-        const [subjects] = await pool.query(`
-          SELECT 
-            sub.subject_id AS id, 
-            sub.subject_name AS name, 
-            c.course_id AS courseId, 
-            c.course_name AS courseName, 
-            sem.semester_id AS semesterId, 
-            sem.semester_name AS semesterName 
-          FROM subjects sub 
-          JOIN semesters sem ON sub.semester_id = sem.semester_id 
-          JOIN courses c ON sem.course_id = c.course_id 
-          WHERE c.course_id = ?
-        `, [req.params.courseId]);
-
-        return res.json({
-          success: true,
-          courseName: courses[0].course_name,
-          count: subjects.length,
-          data: subjects
-        });
-      }
+    const result = await courseModel.getSubjectsByCourseId(req.params.courseId);
+    if (result) {
+      return res.json({
+        success: true,
+        courseName: result.courseName,
+        count: result.subjects.length,
+        data: result.subjects
+      });
     }
   } catch (error) {
     console.error("Database query failed for getSubjectsByCourse, using mock data:", error.message);

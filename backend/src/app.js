@@ -3,6 +3,8 @@ const cors = require("cors");
 
 const courseRoutes = require("./routes/courseRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
+const resourceRoutes = require("./routes/resourceRoutes");
+const adminResourceRoutes = require("./routes/adminResourceRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -28,6 +30,8 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/courses", courseRoutes);
 app.use("/api", subjectRoutes);
+app.use("/api", resourceRoutes);
+app.use("/api/admin", adminResourceRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
