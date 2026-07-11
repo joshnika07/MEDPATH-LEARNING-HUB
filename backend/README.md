@@ -202,3 +202,19 @@ To run the automated endpoint validation demo flow to verify the entire system i
 npm run demo-check
 ```
 For more details, see the [Backend Presentation Demo Script](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/backend-demo-script.md).
+
+---
+
+## Final Submission
+The backend codebase is fully validated and ready for final submission. To verify the final build state and all deliverables, run:
+```bash
+npm run submission-check
+```
+
+> [!CAUTION]
+> **Submission Guidelines**:
+> - **Do NOT push `.env`** to Git control index (confidential credentials).
+> - **Do NOT push `node_modules`** folders to keep build lightweight.
+> - Configure deployment environments using the instructions in [.env.example](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/.env.example).
+
+For a complete index of reports, see the [Backend Submission Index](file:///C:/Users/Elisetty%20Cheran%20Teja/Downloads/Medpath-Learning-Hub/backend/docs/backend-submission-index.md).

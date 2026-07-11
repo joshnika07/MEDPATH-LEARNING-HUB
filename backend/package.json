@@ -9,7 +9,8 @@
     "seed": "node src/scripts/seedDatabase.js",
     "final-check": "node test-final-submission.js",
     "deploy-check": "node test-deployment-readiness.js",
-    "demo-check": "node test-demo-flow.js"
+    "demo-check": "node test-demo-flow.js",
+    "submission-check": "node test-submission-complete.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
